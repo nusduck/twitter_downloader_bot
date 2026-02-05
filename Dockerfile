@@ -1,10 +1,16 @@
-FROM python:3
+FROM python:3.11-slim
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY requirements.txt ./
+# Install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application code
 COPY . .
 
-CMD [ "python", "./main.py" ]
+# Create data directory for persistence
+RUN mkdir -p data
+
+# Run the bot
+CMD ["python", "main.py"]

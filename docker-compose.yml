@@ -1,0 +1,7 @@
+services:
+  twitter-bot:
+    build: .
+    container_name: twitter_downloader_bot
+    restart: always
+    env_file:
+      - .env
