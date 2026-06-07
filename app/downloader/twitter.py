@@ -45,18 +45,22 @@ class TwitterDownloader:
         api_url = f"https://api.vxtwitter.com/Twitter/status/{tweet_id}"
         
         try:
+            logger.debug("Fetching tweet media tweet_id=%s", tweet_id)
             response = await self.client.get(api_url)
             response.raise_for_status()
             
             data = response.json()
             if 'media_extended' in data:
+                logger.debug("Fetched tweet media tweet_id=%s media_count=%s", tweet_id, len(data["media_extended"]))
                 return data['media_extended']
             
+            logger.debug("Tweet API response has no media tweet_id=%s", tweet_id)
             return []
             
         except httpx.HTTPStatusError as e:
             # Try to extract error message from og:description if possible
             if e.response.status_code == 404:
+                logger.info("Tweet not found or private tweet_id=%s", tweet_id)
                 raise TwitterAPIError("Tweet not found or is private.")
             
             content = e.response.text
@@ -66,7 +70,7 @@ class TwitterDownloader:
             
             raise TwitterAPIError(f"HTTP Error {e.response.status_code}")
         except Exception as e:
-            logger.error(f"Error fetching tweet {tweet_id}: {str(e)}")
+            logger.exception("Failed to fetch tweet media tweet_id=%s", tweet_id)
             raise TwitterAPIError(f"Unexpected error: {str(e)}")
 
     async def close(self):

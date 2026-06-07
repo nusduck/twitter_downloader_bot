@@ -37,6 +37,7 @@ Edit `.env` to configure your bot:
 ```ini
 BOT_TOKEN=your_telegram_bot_token
 ADMIN_ID=your_admin_user_id
+LOG_LEVEL=INFO
 
 # Optional: Local Telegram API URL for large file uploads (>50MB)
 # TELEGRAM_API_URL=http://telegram-bot-api:8081
@@ -49,6 +50,29 @@ TWITTER_AUTH_TOKEN=...
 ```bash
 docker-compose up -d --build
 ```
+
+### Shortcut Backend Endpoint
+
+Enable the optional HTTP endpoint to let iOS Shortcuts or another backend submit an X/Twitter URL and have the bot send the media to a Telegram chat:
+
+```ini
+SHORTCUT_ENABLED=true
+SHORTCUT_HOST=0.0.0.0
+SHORTCUT_PORT=8080
+SHORTCUT_TOKEN=change_me
+SHORTCUT_CHAT_ID=your_target_chat_id
+```
+
+Call it with JSON:
+
+```bash
+curl -X POST http://localhost:8080/shortcut \
+  -H "Authorization: Bearer change_me" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://x.com/user/status/1234567890"}'
+```
+
+You can also pass `chat_id` in the request body to override `SHORTCUT_CHAT_ID`.
 
 ---
 
@@ -86,6 +110,7 @@ cp .env.example .env
 ```ini
 BOT_TOKEN=你的BotToken
 ADMIN_ID=你的管理员ID
+LOG_LEVEL=INFO
 
 # 可选：本地 Telegram API 地址（用于支持 >50MB 的大文件上传）
 # TELEGRAM_API_URL=http://telegram-bot-api:8081
@@ -98,3 +123,26 @@ TWITTER_AUTH_TOKEN=...
 ```bash
 docker-compose up -d --build
 ```
+
+### Shortcut 后端接口
+
+可以开启可选 HTTP 接口，让 iOS 快捷指令或其他后端提交 X/Twitter URL，并由 bot 把媒体发送到 Telegram 聊天：
+
+```ini
+SHORTCUT_ENABLED=true
+SHORTCUT_HOST=0.0.0.0
+SHORTCUT_PORT=8080
+SHORTCUT_TOKEN=change_me
+SHORTCUT_CHAT_ID=目标聊天ID
+```
+
+JSON 调用示例：
+
+```bash
+curl -X POST http://localhost:8080/shortcut \
+  -H "Authorization: Bearer change_me" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://x.com/user/status/1234567890"}'
+```
+
+也可以在请求 body 里传 `chat_id` 覆盖 `SHORTCUT_CHAT_ID`。

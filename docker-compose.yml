@@ -3,5 +3,7 @@ services:
     build: .
     container_name: twitter_downloader_bot
     restart: always
+    ports:
+      - "${SHORTCUT_PORT:-8080}:${SHORTCUT_PORT:-8080}"
     env_file:
       - .env

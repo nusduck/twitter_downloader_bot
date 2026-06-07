@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     BOT_TOKEN = os.getenv("BOT_TOKEN")
     DEVELOPER_ID = int(os.getenv("DEVELOPER_ID", "0"))
     IS_BOT_PRIVATE = os.getenv("IS_BOT_PRIVATE", "True").lower() == "true"
@@ -11,5 +12,12 @@ class Config:
     BOT_API_BASE_URL = os.getenv("BOT_API_BASE_URL")
     # Persistence file path
     PERSISTENCE_PATH = os.getenv("PERSISTENCE_PATH", "data/persistence")
+    # Optional HTTP endpoint for iOS Shortcuts or other backends.
+    SHORTCUT_ENABLED = os.getenv("SHORTCUT_ENABLED", "False").lower() == "true"
+    SHORTCUT_HOST = os.getenv("SHORTCUT_HOST", "0.0.0.0")
+    SHORTCUT_PORT = int(os.getenv("SHORTCUT_PORT", "8080"))
+    SHORTCUT_TOKEN = os.getenv("SHORTCUT_TOKEN")
+    SHORTCUT_CHAT_ID = int(os.getenv("SHORTCUT_CHAT_ID", str(DEVELOPER_ID or 0)))
+    SHORTCUT_BACKGROUND = os.getenv("SHORTCUT_BACKGROUND", "True").lower() == "true"
     
 config = Config()

@@ -10,6 +10,8 @@ from telegram.ext import (
 )
 
 from app.core.config import config
+from app.core.logging_config import configure_logging
+from app.core.shortcut_server import start_shortcut_server, stop_shortcut_server
 from app.bot.handlers import (
     start,
     help_command,
@@ -19,12 +21,7 @@ from app.bot.handlers import (
     error_handler,
 )
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-# Set higher logging level for httpx to avoid spamming
-logging.getLogger("httpx").setLevel(logging.WARNING)
+configure_logging()
 logger = logging.getLogger(__name__)
 
 async def post_init(application):
@@ -47,7 +44,13 @@ async def post_init(application):
                 scope=BotCommandScopeChat(config.DEVELOPER_ID)
             )
         except Exception as e:
-            logger.warning(f"Couldn't set commands for developer: {e}")
+            logger.warning("Failed to set developer commands chat_id=%s error=%s", config.DEVELOPER_ID, e)
+
+    await start_shortcut_server(application)
+
+async def post_shutdown(application):
+    """Clean up resources started with the application."""
+    await stop_shortcut_server(application)
 
 def main():
     """Start the bot."""
@@ -63,11 +66,11 @@ def main():
     
     # Use Local Bot API Server if configured
     if config.BOT_API_BASE_URL:
-        logger.info(f"Using Local Bot API Server: {config.BOT_API_BASE_URL}")
+        logger.info("Telegram local Bot API enabled base_url=%s", config.BOT_API_BASE_URL)
         builder.base_url(config.BOT_API_BASE_URL)
         builder.local_mode(True)
 
-    application = builder.post_init(post_init).build()
+    application = builder.post_init(post_init).post_shutdown(post_shutdown).build()
 
     # Add handlers
     application.add_handler(CommandHandler("start", start))
@@ -81,7 +84,7 @@ def main():
     # Error handler
     application.add_error_handler(error_handler)
 
-    logger.info("Bot started. Press Ctrl+C to stop.")
+    logger.info("Bot polling started private=%s shortcut_enabled=%s", config.IS_BOT_PRIVATE, config.SHORTCUT_ENABLED)
     application.run_polling()
 
 if __name__ == "__main__":
