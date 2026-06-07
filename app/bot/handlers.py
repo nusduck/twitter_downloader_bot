@@ -128,6 +128,7 @@ async def process_tweet_text(
     target,
     bot_data: Dict[str, Any],
     temp_id: Optional[str] = None,
+    caption_url: Optional[str] = None,
 ) -> int:
     """Process one text payload containing one or more X/Twitter URLs."""
     tweet_ids = downloader.extract_tweet_ids(text)
@@ -169,6 +170,7 @@ async def process_tweet_text(
                 media_list,
                 tag,
                 temp_id=temp_id or f"shortcut_{tweet_id}_{int(time.time())}",
+                caption_url=caption_url,
             )
             processed += 1
             
@@ -189,13 +191,19 @@ async def reply_media(
     media_list: List[Dict[str, Any]],
     tag: str,
     temp_id: str,
+    caption_url: Optional[str] = None,
 ):
     stats = ensure_stats(bot_data)
     photos = [m for m in media_list if m['type'] == 'image']
     videos = [m for m in media_list if m['type'] == 'video']
     gifs = [m for m in media_list if m['type'] == 'gif']
     
-    caption = tag if tag else ""
+    caption_parts = []
+    if caption_url:
+        caption_parts.append(caption_url)
+    if tag:
+        caption_parts.append(tag)
+    caption = "\n".join(caption_parts)
 
     # Handle Photos
     if photos:

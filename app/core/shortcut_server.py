@@ -50,7 +50,7 @@ def _chat_id_from_payload(payload: Dict[str, Any]) -> Optional[int]:
         return None
 
 
-async def _process_shortcut(application: Application, text: str, chat_id: int) -> None:
+async def _process_shortcut(application: Application, text: str, chat_id: int, caption_url: str) -> None:
     try:
         logger.info("Shortcut job started chat_id=%s", chat_id)
         await process_tweet_text(
@@ -58,6 +58,7 @@ async def _process_shortcut(application: Application, text: str, chat_id: int) -
             ChatReplyTarget(application.bot, chat_id),
             application.bot_data,
             temp_id=f"shortcut_{chat_id}",
+            caption_url=caption_url,
         )
         logger.info("Shortcut job finished chat_id=%s", chat_id)
     except Exception:
@@ -89,6 +90,12 @@ async def shortcut_handler(request: web.Request) -> web.Response:
         or payload.get("share_url")
         or ""
     ).strip()
+    caption_url = (
+        payload.get("url")
+        or payload.get("tweet_url")
+        or payload.get("share_url")
+        or text
+    ).strip()
     if not text:
         logger.info("Shortcut request rejected reason=missing_text remote=%s", request.remote)
         return web.json_response({"ok": False, "error": "missing url or text"}, status=400)
@@ -112,7 +119,7 @@ async def shortcut_handler(request: web.Request) -> web.Response:
         request.remote,
     )
     if config.SHORTCUT_BACKGROUND:
-        task = asyncio.create_task(_process_shortcut(application, text, chat_id))
+        task = asyncio.create_task(_process_shortcut(application, text, chat_id, caption_url))
         request.app["shortcut_tasks"].add(task)
         task.add_done_callback(request.app["shortcut_tasks"].discard)
         return web.json_response({"ok": True, "status": "accepted", "tweet_ids": tweet_ids}, status=202)
@@ -122,6 +129,7 @@ async def shortcut_handler(request: web.Request) -> web.Response:
         ChatReplyTarget(application.bot, chat_id),
         application.bot_data,
         temp_id=f"shortcut_{chat_id}",
+        caption_url=caption_url,
     )
     logger.info("Shortcut request completed chat_id=%s processed=%s", chat_id, processed)
     return web.json_response({"ok": True, "status": "completed", "processed": processed, "tweet_ids": tweet_ids})
